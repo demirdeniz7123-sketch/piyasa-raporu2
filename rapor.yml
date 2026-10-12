@@ -1,0 +1,37 @@
+name: Piyasa Raporu
+
+on:
+  schedule:
+    # Türkiye saatiyle 09:30 ve 18:30 (UTC+3 → 06:30 ve 15:30 UTC), hafta içi
+    - cron: "30 6 * * 1-5"
+    - cron: "30 15 * * 1-5"
+  workflow_dispatch:   # Elle çalıştırma düğmesi
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  rapor:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.yayin.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python piyasa_raporu.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: yayin
+        uses: actions/deploy-pages@v4
